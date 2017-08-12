@@ -1,0 +1,4 @@
+Machine Learning for Analysing and Enriching Multimedia Objects
+
+This project will realise a machine learning based system for extracting and representing structural and semantic meaning form multimedia objects (e.g. radio broadcasts). We will especially focus on how to effectively represent and retrieve knowledge using for example a graph-based representation using existing ontologies and metadata principles (e.g. the music ontology and FRBR).
+
