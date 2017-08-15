@@ -1,9 +1,10 @@
 import pyorient
 import subprocess
 import sys
-import os
+from contextlib import closing
 import time
 import catalog
+import wave
 
 
 class Database:
@@ -35,8 +36,8 @@ class Database:
             sys.exit()
         return
 
-    def insert_catalog_item(self, filename):
-        doc = catalog.generate_catalog_doc(filename)
+    def insert_catalog_item(self, audio_file_rid, file_with_path):
+        doc = catalog.generate_catalog_doc(file_with_path)
         # return record id for created item (to use when creating relationships)
         cmnd = "INSERT INTO CatalogItem CONTENT %s RETURN @rid.asString()" % doc
         record = self.client.command(cmnd)
@@ -46,6 +47,8 @@ class Database:
         return rid
 
     def insert_music_segment(self, start_time, end_time):
+        # DO THIS SOON!!!
+        # NEEDS FIXED: INSTEAD, GOING TO STORE START / END TIME ON THE RELATIONSHIP
         record = self.client.command("INSERT INTO MusicSegment (startTime, endTime) values (%f, %f) "
                                      "RETURN @rid.asString()" % (start_time, end_time))
         record_result = record.pop()
@@ -54,16 +57,26 @@ class Database:
         print "New MusicSegment vertex " + rid + " successfully inserted."
         return rid
 
-    # def insert_speech_segment(self, start_time, end_time):
-    #
-    #
-    #
-    #     !~!~!~ TO DO: THIS NEXT ~!~!~!
-    #
-    #
-    #
-    #     record
-    #     return rid
+    def insert_audio_file(self, file_with_path):
+        # DO THIS NEXT
+        with closing(wave.open(file_with_path, 'r')) as f:
+            frames = f.getnframes()
+            rate = f.getframerate()
+            duration = frames / float(rate)
+        print "DURATION: %f" % duration
+        record = self.client.command("INSERT INTO AudioFile SET Duration = %s RETURN @rid.asString()" % duration)
+        # get the id of the record that has just been inserted
+        record_result = record.pop()
+        rid = record_result.result
+        return rid
+
+    def insert_speech_segment(self, label):
+        record = self.client.command("INSERT INTO SpeechSegment (Label) values (%s) "
+                                     "RETURN @rid.asString()" % label)
+        record_result = record.pop()
+        # get the id of the record that has just been inserted
+        rid = record_result.result
+        return rid
 
     def shutdown_db(self):
         # shut down client

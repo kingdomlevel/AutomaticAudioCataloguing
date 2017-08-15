@@ -60,20 +60,20 @@ def get_master_or_copy(file_with_ext):
     return transfer
 
 
-def get_length(filename):
-    with closing(wave.open(filename, 'r')) as f:
+def get_length(file_with_path):
+    with closing(wave.open(file_with_path, 'r')) as f:
         frames = f.getnframes()
         rate = f.getframerate()
         length = frames / float(rate)
-        length = time.strftime('%H:%M:%S', time.gmtime(length))
+        # length = time.strftime('%H:%M:%S', time.gmtime(length))
         return length
 
 
-def generate_catalog_doc(filename):
+def generate_catalog_doc(file_with_path):
     # create a JSON document containing catalog information from file
-    path, file_with_ext = os.path.split(filename)
+    path, file_with_ext = os.path.split(file_with_path)
     core, extension = os.path.splitext(file_with_ext)
-    duration = get_length(filename)
+    duration = get_length(file_with_path)
     # if the item has already been catalogued with SMC naming convention, we can parse that data
     if check_catalogued(core):
         owner = get_resource_owner(file_with_ext)

@@ -12,10 +12,10 @@ import catalog
 # hide main GUI frame, but prompt file selection
 # (almost definitely TEMP)
 Tk().withdraw()
-filename = askopenfilename()
+file_with_path = askopenfilename()
 # can prob get rid of this 'if' statement once we know how file input is gonna get done
-if os.path.isfile(filename):
-    path, file_with_ext = os.path.split(filename)
+if os.path.isfile(file_with_path):
+    path, file_with_ext = os.path.split(file_with_path)
     path += '/'
     show_name, extension = os.path.splitext(file_with_ext)
 else:
@@ -35,8 +35,8 @@ segment.get_audacity_labels(show_name)
 # print(mfcc)
 
 # database stuff
-# db = orient.Database()
-# db.open_db()
-# db.insert_catalog_item(filename)
-# db.insert_music_segment(0.0, 33.33)
-# db.shutdown_db()
+db = orient.Database()
+db.open_db()
+audio_file = db.insert_audio_file(file_with_path)
+db.insert_catalog_item(audio_file, file_with_path)
+db.shutdown_db()
