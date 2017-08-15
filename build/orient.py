@@ -2,8 +2,8 @@ import pyorient
 import subprocess
 import sys
 import os
-import signal
 import time
+import catalog
 
 
 class Database:
@@ -19,7 +19,7 @@ class Database:
         shell_list = shell_script.split()
         self.pro_group = subprocess.Popen([shell_script], shell=True, stdout=subprocess.PIPE)
         # wait til orient is fully loaded before opening DB
-        time.sleep(5)
+        time.sleep(10)
 
     def open_db(self):
         self.client = pyorient.OrientDB('localhost', 2424)
@@ -35,11 +35,15 @@ class Database:
             sys.exit()
         return
 
-    def insert_audio_file(self, show_name, length):
-        # UNFINISHED!!!!
-        record = self.client.command("INSERT INTO AudioFile ()")
-        # return record id for audio file (to use when creating relationships)
-        return
+    def insert_catalog_item(self, filename):
+        doc = catalog.generate_catalog_doc(filename)
+        # return record id for created item (to use when creating relationships)
+        cmnd = "INSERT INTO CatalogItem CONTENT %s RETURN @rid.asString()" % doc
+        record = self.client.command(cmnd)
+        record_result = record.pop()
+        rid = record_result.result
+        print "New Item vertex %s successfully inserted." % rid
+        return rid
 
     def insert_music_segment(self, start_time, end_time):
         record = self.client.command("INSERT INTO MusicSegment (startTime, endTime) values (%f, %f) "
@@ -50,9 +54,20 @@ class Database:
         print "New MusicSegment vertex " + rid + " successfully inserted."
         return rid
 
+    # def insert_speech_segment(self, start_time, end_time):
+    #
+    #
+    #
+    #     !~!~!~ TO DO: THIS NEXT ~!~!~!
+    #
+    #
+    #
+    #     record
+    #     return rid
+
     def shutdown_db(self):
         # shut down client
         self.client.shutdown('root', 'hello')
         # wait til orient is fully loaded before returning
-        time.sleep(5)
+        time.sleep(10)
         return

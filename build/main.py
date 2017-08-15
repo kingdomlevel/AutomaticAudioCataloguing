@@ -6,6 +6,7 @@ import segment
 import feature
 import numpy
 import orient
+import catalog
 
 
 # hide main GUI frame, but prompt file selection
@@ -24,17 +25,18 @@ else:
 
 # run LIUM scripts to get seg outputs and audacity labels
 # segment.run_script(file_with_ext, path, show_name)
-# segment.get_audacity_labels(show_name)
+segment.get_audacity_labels(show_name)
 
 # test librosa mel spectogram display < DON'T NEED THIS
 # plot = feature.compute_mel_spectogram(filename)
 # display MFCC and first 2 deltas
 # feature.display_mfcc(filename)
-mfcc = feature.extract_mfcc(filename)
-print(mfcc)
+# mfcc = feature.extract_mfcc(filename)
+# print(mfcc)
 
 # database stuff
-db = orient.Database()
-db.open_db()
-db.insert_music_segment(0.0, 33.33)
-db.shutdown_db()
+# db = orient.Database()
+# db.open_db()
+# db.insert_catalog_item(filename)
+# db.insert_music_segment(0.0, 33.33)
+# db.shutdown_db()
