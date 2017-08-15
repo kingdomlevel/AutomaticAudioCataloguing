@@ -73,7 +73,6 @@ def generate_catalog_doc(file_with_path):
     # create a JSON document containing catalog information from file
     path, file_with_ext = os.path.split(file_with_path)
     core, extension = os.path.splitext(file_with_ext)
-    duration = get_length(file_with_path)
     # if the item has already been catalogued with SMC naming convention, we can parse that data
     if check_catalogued(core):
         owner = get_resource_owner(file_with_ext)
@@ -81,9 +80,12 @@ def generate_catalog_doc(file_with_path):
         mark = get_shelf_mark(file_with_ext)
         side = get_side(file_with_ext)
         transfer = get_master_or_copy(file_with_ext)
+    else:
+        # we don't know this data and want it to be null in the database
+        owner, audio_format, mark, side, transfer = (None,)*5
+
     data = json.dumps({
-        "Filename": file_with_ext,
-        "Duration": duration,
+        "SMC_ID": core,
         "ResourceOwner": owner,
         "OriginalFormat": audio_format,
         "ShelfMark": mark,

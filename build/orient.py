@@ -5,6 +5,7 @@ from contextlib import closing
 import time
 import catalog
 import wave
+import os
 
 
 class Database:
@@ -32,17 +33,38 @@ class Database:
             self.client.db_open(self.db_name,  "admin", "admin")
             print self.db_name + " opened successfully"
         else:
-            print "database [" + self.db_name + "] does not exist! session ending..."
+            print "FATAL: Database " + self.db_name + " cannot be found!"
             sys.exit()
         return
 
+    def insert_audio_file(self, file_with_path):
+        path, file_with_ext = os.path.split(file_with_path)
+        with closing(wave.open(file_with_path, 'r')) as f:
+            frames = f.getnframes()
+            rate = f.getframerate()
+            duration = frames / float(rate)
+        record = self.client.command("INSERT INTO AudioFile (Filename, Duration) values ('%s', %f) "
+                                     "RETURN @rid.asString()" % (file_with_ext, duration))
+        print "INSERT INTO AudioFile (Filename, Duration) values ('%s', %f) RETURN @rid.asString()"\
+              % (file_with_ext, duration)
+        # get the id of the record that has just been inserted
+        record_result = record.pop()
+        rid = record_result.result
+        print "New AudioFile vertex %s successfully inserted." % rid
+        return rid
+
     def insert_catalog_item(self, audio_file_rid, file_with_path):
+        # generate catalog info from file
         doc = catalog.generate_catalog_doc(file_with_path)
-        # return record id for created item (to use when creating relationships)
+        # insert catalog item from
         cmnd = "INSERT INTO CatalogItem CONTENT %s RETURN @rid.asString()" % doc
+        # return record id for created item (to use when creating relationships)
         record = self.client.command(cmnd)
         record_result = record.pop()
         rid = record_result.result
+        # create relationship to audio file
+        relationship_command = "CREATE EDGE RefersTo FROM %s TO %s" % (audio_file_rid, rid)
+        self.client.command(relationship_command)
         print "New Item vertex %s successfully inserted." % rid
         return rid
 
@@ -57,25 +79,13 @@ class Database:
         print "New MusicSegment vertex " + rid + " successfully inserted."
         return rid
 
-    def insert_audio_file(self, file_with_path):
-        # DO THIS NEXT
-        with closing(wave.open(file_with_path, 'r')) as f:
-            frames = f.getnframes()
-            rate = f.getframerate()
-            duration = frames / float(rate)
-        print "DURATION: %f" % duration
-        record = self.client.command("INSERT INTO AudioFile SET Duration = %s RETURN @rid.asString()" % duration)
-        # get the id of the record that has just been inserted
-        record_result = record.pop()
-        rid = record_result.result
-        return rid
-
     def insert_speech_segment(self, label):
         record = self.client.command("INSERT INTO SpeechSegment (Label) values (%s) "
                                      "RETURN @rid.asString()" % label)
         record_result = record.pop()
         # get the id of the record that has just been inserted
         rid = record_result.result
+        print "New SpeechSegment vertex %s successfully inserted." % rid
         return rid
 
     def shutdown_db(self):
