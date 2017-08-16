@@ -4,11 +4,8 @@ import sys
 from contextlib import closing
 import time
 import catalog
-import feature
 import wave
 import os
-import numpy as np
-import json
 
 
 class Database:
@@ -40,22 +37,31 @@ class Database:
             sys.exit()
         return
 
-    def _insert_audio_file(self, file_with_path, mfcc):
-        # TO DO: consider including MFCC?
+    def load_record(self, rid):
+        # load a record with id 'rid'
+        record = self.client.record_load(rid)
+        return record
+
+    def __insert_audio_file(self, file_with_path):
         path, file_with_ext = os.path.split(file_with_path)
         with closing(wave.open(file_with_path, 'r')) as f:
             frames = f.getnframes()
             rate = f.getframerate()
             duration = frames / float(rate)
-        record = self.client.command("INSERT INTO AudioFile (Filename, Duration) values ('%s', %f) "
-                                     "RETURN @rid.asString()" % (file_with_ext, duration))
-        # get the id of the record that has just been inserted
-        record_result = record.pop()
-        rid = record_result.result
-        mfcc = feature.extract_mfcc(file_with_path)
-        data = mfcc.tobytes()
-        self.client.record_update()
+        data_item = {'@AudioFile': {'Filename': file_with_ext, 'Duration': duration}}
+        record = self.client.record_create(25, data_item)
+        rid = record._rid
         print "New AudioFile vertex %s successfully inserted." % rid
+        return rid
+
+    def __insert_mfcc_representation(self, audio_file_rid, mfcc):
+        mfcc_list = mfcc.tolist()
+        data_item = {'@MFCC': {'MFCC': mfcc_list}}
+        record = self.client.record_create(77, data_item)
+        rid = record._rid
+        print "\tNew MFCC vertex %s successfully inserted." % rid
+        relationship_command = "CREATE EDGE Represents FROM %s TO %s" % (rid, audio_file_rid)
+        self.client.command(relationship_command)
         return rid
 
     def __insert_catalog_item(self, audio_file_rid, file_with_path):
@@ -67,7 +73,7 @@ class Database:
         record = self.client.command(cmnd)
         record_result = record.pop()
         rid = record_result.result
-        print "New CatalogItem vertex %s successfully inserted." % rid
+        print "\tNew CatalogItem vertex %s successfully inserted." % rid
         # create relationship to audio file
         relationship_command = "CREATE EDGE RefersTo FROM %s TO %s" % (audio_file_rid, rid)
         self.client.command(relationship_command)
@@ -93,13 +99,13 @@ class Database:
         record_result = record.pop()
         # get the id of the record that has just been inserted
         rid = record_result.result
-        print "New SpeechSegment vertex %s successfully inserted." % rid
+        print "\tNew SpeechSegment vertex %s successfully inserted." % rid
         relationship_command = "CREATE EDGE IsPartOf FROM %s TO %s SET startTime = %f, endTime = %f"\
                                % (rid, audio_file_rid, start_time, end_time)
         self.client.command(relationship_command)
         return rid
 
-    def build_ontology(self, file_with_path):
+    def build_ontology(self, file_with_path, mfcc):
         if not os.path.isfile(file_with_path):
             print "Invalid input path:\n\t" + file_with_path
             return
@@ -110,7 +116,8 @@ class Database:
         core, extension = os.path.splitext(file_with_ext)
 
         # add manifestation info to database
-        audio_file_rid = self._insert_audio_file(file_with_path)
+        audio_file_rid = self.__insert_audio_file(file_with_path)
+        self.__insert_mfcc_representation(audio_file_rid, mfcc)
         self.__insert_catalog_item(audio_file_rid, file_with_path)
 
         # read segmentation label file to construct sub-manifestation layer of ontology
