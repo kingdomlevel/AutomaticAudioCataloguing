@@ -1,8 +1,9 @@
+import os
 import numpy as np
 import librosa
 import librosa.display
-import pyorient
 import soundfile as sf
+from collections import namedtuple
 # matplotlib for graph displays
 import matplotlib.pyplot as plt
 import matplotlib.style as ms
@@ -20,39 +21,76 @@ def display_mfcc(mfcc):
     return
 
 
-def extract_mfcc(file_with_path):
-    y, sr = librosa.load(file_with_path)
+def extract_mfcc(file_with_path, y=None, sr=-1):
+    # extract top 13 MFCCS for [specified part of] audio file
+
+    if y is None or sr < 0:
+        # no time series data provided; extract from whole file
+        y, sr = librosa.load(file_with_path)
+
     S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128)
     log_S = librosa.logamplitude(S, ref_power=np.max)
-    # top 13 Mel-frequency cepstral coefficients (MFCCs)
     mfcc = librosa.feature.mfcc(S=log_S, n_mfcc=13)
     return mfcc
 
 
-def mfcc_from_database(rid):
-    record = pyorient.load_record(rid)
-    mfcc_list = record.__getattr__('MFCC')
-    mfcc = np.asarray(mfcc_list)
-    return mfcc
+def calc_tempo(file_with_path, y=None, sr=-1):
+    # calculate tempo for all or specified part of audio file
 
+    if y is None or sr < 0:
+        # no time series data provided; read whole file
+        y, sr = librosa.load(file_with_path)
 
-def calc_tempo(file_with_path):
-    y, sr = librosa.load(file_with_path)
     onset_env = librosa.onset.onset_strength(y, sr)
     tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
     print(type(tempo))
     print tempo
 
 
-def display_mel_spectogram(file_with_path):
-    # probs won't need this
-    y, sr = librosa.load(file_with_path)
+def output_mel_spectogram(file_with_path, y=None, sr=-1):
+    # output mel spectogram for all or specified part of audio file
+
+    # handle i/o
+    path, file_with_ext = os.path.split(file_with_path)
+    core, extension = os.path.splitext(file_with_ext)
+    output_loc = 'outputs/%s/images/' % core
+    if not os.path.exists(output_loc):
+        os.makedirs(output_loc)
+
+    if y is None or sr < 0:
+        # no time series data provided; read whole file
+        y, sr = librosa.load(file_with_path)
+
+    duration = librosa.core.get_duration(y, sr)
     S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128)
     log_S = librosa.logamplitude(S, ref_power=np.max)
     plt.figure(figsize=(12,4))
     librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel')
     plt.title('mel power spectogram')
     plt.colorbar(format='%+02.0f dB')
-    plt.tight_layout()
-    plt.show()
+    plt.savefig('%s%s_%s.png' % (output_loc, core, duration))
     return
+
+
+def get_time_series(file_with_path, start_time_s=-1, end_time_s=-1):
+    # method to return time series and sample rate from all or part of an audio file
+    if start_time_s < 0 or end_time_s < 0:
+        # load whole file
+        y, sr = librosa.load(file_with_path)
+    else:
+        # load specific section of audio file
+        # time in frames = time in seconds * sr
+        f = sf.SoundFile(file_with_path)
+        sr = f.samplerate
+        start_time_f = int(start_time_s * sr)
+        end_time_f = int(end_time_s * sr)
+        data, sample_rate = sf.read(file_with_path, start=start_time_f, stop=end_time_f, dtype='float32')
+        # transpose ndarray, resample, and force to mono to match librosa standards
+        data_t = data.T
+        data_22k = librosa.resample(data_t, sample_rate, 22050)
+        y = librosa.core.to_mono(data_22k)
+        sr = 22050
+
+    TimeSeries = namedtuple('TimeSeries', ['y', 'sr'])
+    output = TimeSeries(y, sr)
+    return output

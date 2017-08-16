@@ -1,5 +1,6 @@
 import pyorient
 import subprocess
+import numpy as np
 import sys
 from contextlib import closing
 import time
@@ -36,11 +37,6 @@ class Database:
             print "FATAL: Database " + self.db_name + " cannot be found!"
             sys.exit()
         return
-
-    def load_record(self, rid):
-        # load a record with id 'rid'
-        record = self.client.record_load(rid)
-        return record
 
     def __insert_audio_file(self, file_with_path):
         path, file_with_ext = os.path.split(file_with_path)
@@ -106,6 +102,7 @@ class Database:
         return rid
 
     def build_ontology(self, file_with_path, mfcc):
+        # only add to database if file is valid
         if not os.path.isfile(file_with_path):
             print "Invalid input path:\n\t" + file_with_path
             return
@@ -126,7 +123,6 @@ class Database:
         lines = f_in.readlines()
         for l in lines:
             data = l.split()
-            print data
             if data[2] == 'MUSIC':
                 # add music segments
                 self.__insert_music_segment(audio_file_rid, float(data[0]), float(data[1]))
@@ -137,6 +133,18 @@ class Database:
 
         f_in.close()
         return
+
+    def load_record(self, rid):
+        # load a record with id 'rid'
+        record = self.client.record_load(rid)
+        return record
+
+    def mfcc_from_database(rid):
+        # fetches MFCC embedded document from orient db, converts to numpy array
+        record = pyorient.load_record(rid)
+        mfcc_list = record.__getattr__('MFCC')
+        mfcc = np.asarray(mfcc_list)
+        return mfcc
 
     def shutdown_db(self):
         # shut down client
