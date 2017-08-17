@@ -7,6 +7,38 @@ import feature
 import orient
 
 
+# Helper method to read segment input
+def __read_segs(rid, labels):
+    f_in = open(labels, "r")
+    lines = f_in.readlines()
+    # keep track of previous seg rid to do sequential relationships between segs
+    previous_seg = None
+    for l in lines:
+        data = l.split()
+        start_time = float(data[0])
+        end_time = float(data[1])
+        # # IT IS POSSIBLE TO ADD MFCCs AT THIS STAGE...
+        # # below 'insert segment' methods can take mfcc ndarray as a parameter...
+        # # TO DO: figure out if this is worth doing... e.g.
+        # time_series = feature.get_time_series(file_with_path, start_time, end_time)
+        # seg_mfcc = feature.extract_mfcc(file_with_path, time_series.y, time_series.sr)
+        if data[2] == 'MUSIC':
+            # add music segments
+            seg_rid = db.insert_music_segment(rid, start_time, end_time)
+            # db.insert_music_segment(rid, start_time, end_time, seg_mfcc)
+        else:
+            # add speaker segments
+            speaker_lbl = "%s %s %s %s %s %s" % (data[2], data[3], data[4], data[5], data[6], data[7])
+            seg_rid = db.insert_speech_segment(rid, start_time, end_time, speaker_lbl)
+            # db.insert_speech_segment(rid, start_time, end_time, speaker_lbl, seg_mfcc)
+        # generate sequential relationship between segments
+        if previous_seg is None:
+            previous_seg = seg_rid
+        else:
+            db.insert_sequential_relationship(previous_seg, seg_rid)
+            previous_seg = seg_rid
+    f_in.close()
+
 # hide main GUI frame, but prompt file selection
 # (almost definitely TEMP)
 Tk().withdraw()
@@ -15,43 +47,42 @@ if not input_files:
     sys.exit("No valid file(s) selected")
 print input_files
 
-# db = orient.Database()
-# db.open_db()
+db = orient.Database()
+db.open_db()
 
 for file_with_path in input_files:
-    # # SEGMENTATION STUFF
-    # segment.run_script(file_with_ext, path, show_name)
-    # segment.get_audacity_labels(show_name)
+    # get details from file input
+    path, file_with_ext = os.path.split(file_with_path)
+    path += '/'
+    core, extension = os.path.splitext(file_with_ext)
 
-    # # FEATURE STUFF
-    # mfcc = feature.extract_mfcc(file_with_path)
-    # feature.display_mfcc(mfcc)
-    # feature.calc_tempo(file_with_path)
-    # plot = feature.display_mel_spectogram(file_with_path)   # test spectogram display (probs don't need this)
+    if (extension == ".wav") or (extension == ".mp3"):
+        # assuming LIUM segmentationhas been completed either on HPCCs or via 'preprocess.py'
 
-    # # TEMP: TESTING READING ~PART~ OF AN AUDIO FILE
-    # path, file_with_ext = os.path.split(file_with_path)
-    # path += '/'
-    # core, extension = os.path.splitext(file_with_ext)
-    # time_series = feature.get_time_series(file_with_path)
-    # feature.output_mel_spectogram(file_with_path, time_series.y, time_series.sr)
-    # file_in_name = 'outputs/%s/%sAUDACITY.txt' % (core, core)
-    # f_in = open(file_in_name, "r")
-    # lines = f_in.readlines()
-    # for l in lines:
-    #     data = l.split()
-    #     if data[2] == 'MUSIC':
-    #         # add music segments
-    #         time_series = feature.get_time_series(file_with_path, float(data[0]), float(data[1]))
-    #         feature.output_mel_spectogram(file_with_path, time_series.y, time_series.sr)
-    # f_in.close()
+        # generate audacity label file
+        label_file = segment.get_audacity_labels(core)
+
+        # assuming mfcc has already been generated either on HPCCs or via 'preprocess.py'
+        # TO DO: READ IN MFCC DATA HERE, SOMEHOW? temp fix below
+        mfcc = feature.extract_mfcc(file_with_path)
+
+        # start building database
+        # mainifestations
+        audio_file_rid = db.construct_manifestation(file_with_path, mfcc)   # mfcc is optional
+
+        # read segmentation label file to construct sub-manifestation layer of ontology
+        __read_segs(audio_file_rid, label_file)
 
 
-    # # DATABASE STUFF
-    # audio_file_rid = db._insert_audio_file(file_with_path, mfcc)
+    else:
+        print "File %s is not valid audio input; please select .wav or .mp3" % file_with_ext
 
-    # db.insert_catalog_item(audio_file_rid, file_with_path)
-    # db.insert_speech_segment(audio_file_rid, 25.5, 35.2, "TEST DATA PLEASE DELETE")
-    db.build_ontology(file_with_path, mfcc)
+db.shutdown_db()
 
-# db.shutdown_db()
+
+# TEMP: code from running development tests
+# # FEATURE STUFF
+# mfcc = feature.extract_mfcc(file_with_path)
+# feature.display_mfcc(file_with_path, mfcc)
+# feature.calc_tempo(file_with_path)
+# plot = feature.display_mel_spectogram(file_with_path)   # test spectogram display (probs don't need this)

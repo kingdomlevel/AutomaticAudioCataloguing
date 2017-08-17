@@ -139,14 +139,14 @@ def __write_labels_to_file(core, segments):
     for s in segments:
         f_out.write("%f\t%f\t%s\n" % (s.start_time, s.end_time, s.label))
     f_out.close()
-    return
+    return file_out_name
 
 
 def get_audacity_labels(core):
     fine_segs = __extract_segments(core)
     coarse_segs = __clean_speakers(fine_segs)
-    __write_labels_to_file(core, coarse_segs)
-    return
+    file_out_name = __write_labels_to_file(core, coarse_segs)
+    return file_out_name
 
 
 class Seg(object):

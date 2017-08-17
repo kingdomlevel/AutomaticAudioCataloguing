@@ -10,23 +10,33 @@ import matplotlib.style as ms
 ms.use('seaborn-muted')
 
 
-def display_mfcc(mfcc):
-    # display as matplotlib plot
+def display_mfcc(file_with_path, mfcc):
+    # output as matplotlib file in /outputs/[core]/mfcc.png
+    # handle i/o
+    path, file_with_ext = os.path.split(file_with_path)
+    core, extension = os.path.splitext(file_with_ext)
+    output_loc = 'outputs/%s/images/' % core
+    if not os.path.exists(output_loc):
+        os.makedirs(output_loc)
+
     librosa.display.specshow(mfcc)
     plt.ylabel('MFCC')
     plt.colorbar()
     # keep tidy
     plt.tight_layout()
-    plt.show()
+    plt.savefig('%s%s_%s.png' % (output_loc, core, mfcc))
     return
 
 
-def extract_mfcc(file_with_path, y=None, sr=-1):
+def extract_mfcc(file_with_path=None, y=None, sr=-1):
     # extract top 13 MFCCS for [specified part of] audio file
 
-    if y is None or sr < 0:
+    if (y is None or sr < 0) and (file_with_path is not None):
         # no time series data provided; extract from whole file
         y, sr = librosa.load(file_with_path)
+    else:
+        print "ERROR in feature.extract_mfcc(): Invalid Arguements"
+        return
 
     S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128)
     log_S = librosa.logamplitude(S, ref_power=np.max)
@@ -34,12 +44,15 @@ def extract_mfcc(file_with_path, y=None, sr=-1):
     return mfcc
 
 
-def calc_tempo(file_with_path, y=None, sr=-1):
-    # calculate tempo for all or specified part of audio file
+def calc_tempo(file_with_path=None, y=None, sr=-1):
+    # calculate tempo for [specified part of] audio file
 
-    if y is None or sr < 0:
-        # no time series data provided; read whole file
+    if (y is None or sr < 0) and (file_with_path is not None):
+        # no time series data provided; extract from whole file
         y, sr = librosa.load(file_with_path)
+    else:
+        print "ERROR in feature.calc_tempo(): Invalid Arguements"
+        return
 
     onset_env = librosa.onset.onset_strength(y, sr)
     tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)

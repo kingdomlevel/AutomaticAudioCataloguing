@@ -1,12 +1,12 @@
-import pyorient
-import subprocess
-import numpy as np
-import sys
-from contextlib import closing
-import time
-import catalog
-import wave
 import os
+import sys
+import subprocess
+import pyorient
+import time
+import wave
+import numpy as np
+from contextlib import closing
+import catalog
 
 
 class Database:
@@ -52,7 +52,7 @@ class Database:
 
     def __insert_mfcc_representation(self, audio_file_rid, mfcc):
         mfcc_list = mfcc.tolist()
-        data_item = {'@MFCC': {'MFCC': mfcc_list}}
+        data_item = {'@MFCC': {'Data': mfcc_list}}
         record = self.client.record_create(77, data_item)
         rid = record._rid
         print "\tNew MFCC vertex %s successfully inserted." % rid
@@ -75,33 +75,47 @@ class Database:
         self.client.command(relationship_command)
         return rid
 
-    def __insert_music_segment(self, audio_file_rid, start_time, end_time):
-        # DO THIS SOON!!!
-        # NEEDS FIXED: INSTEAD, GOING TO STORE START / END TIME ON THE RELATIONSHIP
-        record = self.client.command("INSERT INTO MusicSegment (startTime, endTime) values (%f, %f) "
-                                     "RETURN @rid.asString()" % (start_time, end_time))
-        record_result = record.pop()
+    def insert_music_segment(self, audio_file_rid, start_time, end_time, mfcc=None):
+        if mfcc is not None:
+            # create record with mfcc included
+            mfcc_list = mfcc.tolist()
+            data_item = {'@MusicSegment': {'MFCC': mfcc_list}}
+            record = self.client.record_create(33, data_item)
+        else:
+            # create record without mfcc
+            data_item = {'@MusicSegment': {}}
+            record = self.client.record_create(33, data_item)
         # get the id of the record that has just been inserted
-        rid = record_result.result
-        print "New MusicSegment vertex %s successfully inserted." % rid
+        rid = record._rid
+        print "\t\tNew MusicSegment vertex %s successfully inserted." % rid
         relationship_command = "CREATE EDGE IsPartOf FROM %s TO %s SET startTime = %f, endTime = %f" \
                                % (rid, audio_file_rid, start_time, end_time)
         self.client.command(relationship_command)
         return rid
 
-    def __insert_speech_segment(self, audio_file_rid, start_time, end_time, label):
-        record = self.client.command("INSERT INTO SpeechSegment (Label) values ('%s') "
-                                     "RETURN @rid.asString()" % label)
-        record_result = record.pop()
+    def insert_speech_segment(self, audio_file_rid, start_time, end_time, label, mfcc=None):
+        if mfcc is not None:
+            # create record with mfcc included
+            mfcc_list = mfcc.tolist()
+            data_item = {'@SpeechSegment': {'Label': label, 'MFCC': mfcc_list}}
+            record = self.client.record_create(37, data_item)
+        else:
+            # create record without mfcc
+            data_item = {'@SpeechSegment': {'Label': label}}
+            record = self.client.record_create(37, data_item)
         # get the id of the record that has just been inserted
-        rid = record_result.result
-        print "\tNew SpeechSegment vertex %s successfully inserted." % rid
+        rid = record._rid
+        print "\t\tNew SpeechSegment vertex %s successfully inserted." % rid
         relationship_command = "CREATE EDGE IsPartOf FROM %s TO %s SET startTime = %f, endTime = %f"\
                                % (rid, audio_file_rid, start_time, end_time)
         self.client.command(relationship_command)
         return rid
 
-    def build_ontology(self, file_with_path, mfcc):
+    def insert_sequential_relationship(self, rid_from, rid_to):
+        self.client.command("CREATE EDGE FollowedBy FROM %s TO %s" % (rid_from, rid_to))
+        return
+
+    def construct_manifestation(self, file_with_path, mfcc=None):
         # only add to database if file is valid
         if not os.path.isfile(file_with_path):
             print "Invalid input path:\n\t" + file_with_path
@@ -114,25 +128,10 @@ class Database:
 
         # add manifestation info to database
         audio_file_rid = self.__insert_audio_file(file_with_path)
-        self.__insert_mfcc_representation(audio_file_rid, mfcc)
         self.__insert_catalog_item(audio_file_rid, file_with_path)
-
-        # read segmentation label file to construct sub-manifestation layer of ontology
-        file_in_name = 'outputs/%s/%sAUDACITY.txt' % (core, core)
-        f_in = open(file_in_name, "r")
-        lines = f_in.readlines()
-        for l in lines:
-            data = l.split()
-            if data[2] == 'MUSIC':
-                # add music segments
-                self.__insert_music_segment(audio_file_rid, float(data[0]), float(data[1]))
-            else:
-                # add speaker segments
-                speaker_lbl = "%s %s %s %s %s %s" % (data[2], data[3], data[4], data[5], data[6], data[7])
-                self.__insert_speech_segment(audio_file_rid, float(data[0]), float(data[1]), speaker_lbl)
-
-        f_in.close()
-        return
+        if mfcc is not None:
+            self.__insert_mfcc_representation(audio_file_rid, mfcc)
+        return audio_file_rid
 
     def load_record(self, rid):
         # load a record with id 'rid'

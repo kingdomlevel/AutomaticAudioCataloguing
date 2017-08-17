@@ -9,3 +9,4 @@ librosa/
 lium/
 MIRtoolbox/
 orientdb/
+*.png
