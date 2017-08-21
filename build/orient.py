@@ -104,12 +104,64 @@ class Database:
             data_item = {'@SpeechSegment': {'Label': label}}
             record = self.client.record_create(37, data_item)
         # get the id of the record that has just been inserted
-        rid = record._rid
-        print "\t\tNew SpeechSegment vertex %s successfully inserted." % rid
-        relationship_command = "CREATE EDGE IsPartOf FROM %s TO %s SET startTime = %f, endTime = %f"\
-                               % (rid, audio_file_rid, start_time, end_time)
-        self.client.command(relationship_command)
-        return rid
+        speech_rid = record._rid
+        print "\t\tNew SpeechSegment vertex %s successfully inserted." % speech_rid
+        relationship_to_audiofile = "CREATE EDGE IsPartOf FROM %s TO %s SET startTime = %f, endTime = %f"\
+                               % (speech_rid, audio_file_rid, start_time, end_time)
+        self.client.command(relationship_to_audiofile)
+        self.__add_speaker_relation(speech_rid, audio_file_rid, label)
+        return speech_rid
+
+    def __add_speaker_relation(self, speech_rid, audio_rid, label):
+        # load and clean data from label for insertion / comparison purposes
+        data = label.split()
+        label_id = data[1].strip(',')
+        sex = data[3].strip(',')
+        if sex == 'M':
+            sex = 'Male'
+        elif sex == 'F':
+            sex = 'Female'
+        band = data[5]
+        if band == 'S':
+            band = 'Studio'
+        elif band == 'T':
+            band = 'Telephone'
+
+        #   check if Person exists with Label: property matching this method's 'label' variable...
+        query = "SELECT * from Person WHERE ID = '%s'" % label_id
+        query_result = self.client.query(query)
+        # print "QUERY RESULT:"
+        # print query_result
+        speaker_exists = False
+        if query_result:
+            print "ID MATCH FOUND"
+            # speaker with that id exists in database... but we need to check if it's related to 'this' file
+            # does Person have SpokenBy relationship to a SpeechSegment where...
+            speaker_id = query_result[0]._rid
+            print "SPEAKER ID: %s" % speaker_id
+            query = "SELECT in() FROM %s" % speaker_id
+            query_result = self.client.query(query)
+            seg_returned =  '#' + query_result[0]._in[0].get()
+            print "SEG RETURNED %s" % seg_returned
+            # ...SpeechSegment has IsPartof relationship to AudioFile matching this method's 'audio_file_rid'?
+            query = "SELECT out('IsPartOf') FROM %s" % seg_returned
+            query_result = self.client.query(query)
+            audio_returned = '#' + query_result[0]._out[0].get()
+            print "AUD RETURNED: %s" % audio_returned
+            if audio_returned == audio_rid:
+                print "SPEAKER EXISTS!"
+                speaker_exists = True
+
+        if not speaker_exists:
+            #  need to create the new speaker in the database
+            data_item = {'@Person': {'ID': label_id, 'Sex': sex, 'Band': band}}
+            record = self.client.record_create(45, data_item)
+            speaker_id = record._rid
+            print "\t\t\tNew Speaker vertex %s successfully inserted." % speaker_id
+
+        # create relationship from speech segment to speaker
+        self.client.command("CREATE EDGE SpokenBy FROM %s TO %s" % (speech_rid, speaker_id))
+        return
 
     def insert_sequential_relationship(self, rid_from, rid_to):
         self.client.command("CREATE EDGE FollowedBy FROM %s TO %s" % (rid_from, rid_to))
@@ -151,3 +203,9 @@ class Database:
         # wait til orient is fully loaded before returning
         time.sleep(10)
         return
+
+    def truncate_db(self):
+        self.client.command("delete vertex from (select from v)")
+        print "ALL VERTEXES IN DATABASE DELETED"
+        return
+

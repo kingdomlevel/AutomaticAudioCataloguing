@@ -10,7 +10,7 @@ import matplotlib.style as ms
 ms.use('seaborn-muted')
 
 
-def display_mfcc(file_with_path, mfcc):
+def output_mfcc(file_with_path, mfcc):
     # output as matplotlib file in /outputs/[core]/mfcc.png
     # handle i/o
     path, file_with_ext = os.path.split(file_with_path)

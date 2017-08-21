@@ -73,7 +73,6 @@ for file_with_path in input_files:
         # read segmentation label file to construct sub-manifestation layer of ontology
         __read_segs(audio_file_rid, label_file)
 
-
     else:
         print "File %s is not valid audio input; please select .wav or .mp3" % file_with_ext
 
