@@ -26,8 +26,12 @@ def __extract_segments(core):
     # speaker are not appended... it is recommended to tidy these segments using clean_labels()
 
     # handle i/o
-    seg_in_name = 'outputs/%s/%s.c.seg' % (core, core)
-    music_in_name = 'outputs/%s/%s.sms.seg' % (core, core)
+    # seg_in_name = 'outputs/%s/%s.c.seg' % (core, core)
+    # music_in_name = 'outputs/%s/%s.sms.seg' % (core, core)
+    seg_in_name = '/Volumes/ADATA HD710/frombjorn/smc26khzmonoseg/' \
+                  'Cassettes/%s_16khz_mono/%s_16khz_mono.txt.c.seg' % (core, core)
+    music_in_name = '/Volumes/ADATA HD710/frombjorn/smc26khzmonoseg/' \
+                    'Cassettes/%s_16khz_mono/%s_16khz_mono.txt.sms.seg' % (core, core)
     seg_in = open(seg_in_name, "r+")
     music_in = open(music_in_name)
     output_list = []
@@ -95,7 +99,7 @@ def __clean_speakers(segments):
             # be appended.... music segments should be outputted "as is"
             if not music:
                 # speech
-                time_bool = s.start_time - temp_seg.end_time <= 0.01
+                time_bool = s.start_time - temp_seg.end_time <= 0.1
                 same_speaker = s.label == temp_seg.label
 
                 if same_speaker and time_bool:
@@ -134,7 +138,10 @@ def __clean_speakers(segments):
 
 
 def __write_labels_to_file(core, segments):
-    file_out_name = 'outputs/%s/%sAUDACITY.txt' % (core, core)
+    output_loc = 'outputs/%s/' % core
+    if not os.path.exists(output_loc):
+        os.makedirs(output_loc)
+    file_out_name = output_loc + '%sAUDACITY.txt' % core
     f_out = open(file_out_name, "w")
     for s in segments:
         f_out.write("%f\t%f\t%s\n" % (s.start_time, s.end_time, s.label))

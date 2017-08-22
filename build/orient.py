@@ -81,8 +81,10 @@ class Database:
         doc = catalog.generate_catalog_doc(file_with_path)
         data = json.loads(doc)
         shelf_mark = data["ShelfMark"]
-
-        if shelf_mark is None:
+        catalog_rid = self.client.query("SELECT @rid FROM CatalogItem WHERE ShelfMark = '%s'" % shelf_mark)
+        print catalog_rid
+        print type(catalog_rid)
+        if not catalog_rid:
             # need to insert new CatalogItem
             # generate catalog info from file and insert into db
             cmnd = "INSERT INTO CatalogItem CONTENT %s RETURN @rid.asString()" % doc
@@ -91,11 +93,8 @@ class Database:
             record_result = record.pop()
             catalog_rid = record_result.result
             print "\tNew CatalogItem vertex %s successfully inserted." % catalog_rid
-        else:
-            # CatalogItem already exists
-            catalog_rid = self.client.query("SELECT @rid FROM CatalogItem WHERE ShelfMark = '%s'" % shelf_mark)
 
-        # create relationship to audio file
+        # [now that] CatalogItem exists: create relationship to audio file
         audio_file_relation = "CREATE EDGE RefersTo FROM %s TO %s" % (audio_file_rid, catalog_rid)
         self.client.command(audio_file_relation)
         return catalog_rid

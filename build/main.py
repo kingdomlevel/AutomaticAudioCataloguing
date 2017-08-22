@@ -64,11 +64,11 @@ for file_with_path in input_files:
 
         # assuming mfcc has already been generated either on HPCCs or via 'preprocess.py'
         # TO DO: READ IN MFCC DATA HERE, SOMEHOW? temp fix below
-        mfcc = feature.extract_mfcc(file_with_path)
+        # mfcc = feature.extract_mfcc(file_with_path)
 
         # start building database
         # mainifestations
-        audio_file_rid = db.construct_manifestation(file_with_path, mfcc)   # mfcc is optional
+        audio_file_rid = db.construct_manifestation(file_with_path)   # mfcc is optional
 
         # read segmentation label file to construct sub-manifestation layer of ontology
         __read_segs(audio_file_rid, label_file)
