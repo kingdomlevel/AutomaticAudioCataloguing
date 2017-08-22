@@ -7,6 +7,7 @@ import wave
 import numpy as np
 from contextlib import closing
 import catalog
+import json
 
 
 class Database:
@@ -61,19 +62,29 @@ class Database:
         return rid
 
     def __insert_catalog_item(self, audio_file_rid, file_with_path):
-        # generate catalog info from file
+        # check if matching CatalogItem already exists in db (for another manifestation)
+        # e.g. 2 sides of one cassette; radio recording acorss multiple cassettes; etc
         doc = catalog.generate_catalog_doc(file_with_path)
-        # insert catalog item from
-        cmnd = "INSERT INTO CatalogItem CONTENT %s RETURN @rid.asString()" % doc
-        # return record id for created item (to use when creating relationships)
-        record = self.client.command(cmnd)
-        record_result = record.pop()
-        rid = record_result.result
-        print "\tNew CatalogItem vertex %s successfully inserted." % rid
+        data = json.loads(doc)
+        shelf_mark = data["ShelfMark"]
+
+        if shelf_mark is None:
+            # need to insert new CatalogItem
+            # generate catalog info from file and insert into db
+            cmnd = "INSERT INTO CatalogItem CONTENT %s RETURN @rid.asString()" % doc
+            # return record id for created item (to use when creating relationships)
+            record = self.client.command(cmnd)
+            record_result = record.pop()
+            catalog_rid = record_result.result
+            print "\tNew CatalogItem vertex %s successfully inserted." % catalog_rid
+        else:
+            # CatalogItem already exists
+            catalog_rid = self.client.query("SELECT @rid FROM CatalogItem WHERE ShelfMark = '%s'" % shelf_mark)
+
         # create relationship to audio file
-        relationship_command = "CREATE EDGE RefersTo FROM %s TO %s" % (audio_file_rid, rid)
-        self.client.command(relationship_command)
-        return rid
+        audio_file_relation = "CREATE EDGE RefersTo FROM %s TO %s" % (audio_file_rid, catalog_rid)
+        self.client.command(audio_file_relation)
+        return catalog_rid
 
     def insert_music_segment(self, audio_file_rid, start_time, end_time, mfcc=None):
         if mfcc is not None:
@@ -106,8 +117,8 @@ class Database:
         # get the id of the record that has just been inserted
         speech_rid = record._rid
         print "\t\tNew SpeechSegment vertex %s successfully inserted." % speech_rid
-        relationship_to_audiofile = "CREATE EDGE IsPartOf FROM %s TO %s SET startTime = %f, endTime = %f"\
-                               % (speech_rid, audio_file_rid, start_time, end_time)
+        relationship_to_audiofile = "CREATE EDGE IsPartOf FROM %s TO %s SET startTime = %f, endTime = %f" \
+                                    % (speech_rid, audio_file_rid, start_time, end_time)
         self.client.command(relationship_to_audiofile)
         self.__add_speaker_relation(speech_rid, audio_file_rid, label)
         return speech_rid
