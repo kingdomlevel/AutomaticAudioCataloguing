@@ -51,6 +51,20 @@ class Database:
         print "New AudioFile vertex %s successfully inserted." % rid
         return rid
 
+    def __insert_item(self, audio_file_rid, file_with_path):
+        # get details from file input
+        path, file_with_ext = os.path.split(file_with_path)
+        path += '/'
+        core, extension = os.path.splitext(file_with_ext)
+
+        data_item = {'@Item': {'Filename': core, 'Format': extension, 'ContainingFolder': path}}
+        record = self.client.record_create(69, data_item)
+        rid = record._rid
+        print "\tNew Item vertex %s successfully inserted." % rid
+        relationship_command = "CREATE EDGE ExemplifiedBy FROM %s TO %s" % (audio_file_rid, rid)
+        self.client.command(relationship_command)
+        return rid
+
     def __insert_mfcc_representation(self, audio_file_rid, mfcc):
         mfcc_list = mfcc.tolist()
         data_item = {'@MFCC': {'Data': mfcc_list}}
@@ -145,22 +159,18 @@ class Database:
         # print query_result
         speaker_exists = False
         if query_result:
-            print "ID MATCH FOUND"
             # speaker with that id exists in database... but we need to check if it's related to 'this' file
             # does Person have SpokenBy relationship to a SpeechSegment where...
             speaker_id = query_result[0]._rid
-            print "SPEAKER ID: %s" % speaker_id
             query = "SELECT in() FROM %s" % speaker_id
             query_result = self.client.query(query)
             seg_returned =  '#' + query_result[0]._in[0].get()
-            print "SEG RETURNED %s" % seg_returned
             # ...SpeechSegment has IsPartof relationship to AudioFile matching this method's 'audio_file_rid'?
             query = "SELECT out('IsPartOf') FROM %s" % seg_returned
             query_result = self.client.query(query)
             audio_returned = '#' + query_result[0]._out[0].get()
-            print "AUD RETURNED: %s" % audio_returned
             if audio_returned == audio_rid:
-                print "SPEAKER EXISTS!"
+                # speaker does exist!! no need to insert :)
                 speaker_exists = True
 
         if not speaker_exists:
@@ -194,6 +204,8 @@ class Database:
         self.__insert_catalog_item(audio_file_rid, file_with_path)
         if mfcc is not None:
             self.__insert_mfcc_representation(audio_file_rid, mfcc)
+        # include item (tho it is not the focus of the project)
+        item = self.__insert_item(audio_file_rid, file_with_path)
         return audio_file_rid
 
     def load_record(self, rid):
