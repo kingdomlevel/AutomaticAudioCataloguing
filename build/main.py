@@ -69,23 +69,19 @@ for file_with_path in input_files:
         chroma = feature.extract_chroma(file_with_path)
         # chroma = feature.chroma_from_csv(file_with_path)
         feature.output_chroma_image(file_with_path, chroma)
+        tempo = feature.calc_tempo(file_with_path)
+        sys.exit()
 
-        # build database
+        # CONSTRUCT ONTOLOGY:
         # mainifestation layer
         audio_file_rid = db.construct_manifestation(file_with_path, mfcc, chroma)   # mfcc and chroma are optional
-
-        # read segmentation label file to construct sub-manifestation layer of ontology
+        # read segmentation label file to construct sub-manifestation layer
         __read_segs(audio_file_rid, label_file)
+
+        # insert item (though it is not primary focus of the project)
+        db.insert_item(audio_file_rid, file_with_path)
 
     else:
         print "File %s is not valid audio input; please select .wav or .mp3" % file_with_ext
 
 db.shutdown_db()
-
-
-# TEMP: code from running development tests
-# # FEATURE STUFF
-# mfcc = feature.extract_mfcc(file_with_path)
-# feature.display_mfcc(file_with_path, mfcc)
-# feature.calc_tempo(file_with_path)
-# plot = feature.display_mel_spectogram(file_with_path)   # test spectogram display (probs don't need this)

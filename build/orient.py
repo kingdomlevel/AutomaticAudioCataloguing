@@ -61,7 +61,9 @@ class Database:
         print "New AudioFile vertex %s successfully inserted." % rid
         return rid
 
-    def __insert_item(self, audio_file_rid, file_with_path):
+    def insert_item(self, audio_file_rid, file_with_path):
+        # include item (tho it is not the focus of the project)
+
         # get details from file input
         path, file_with_ext = os.path.split(file_with_path)
         path += '/'
@@ -223,8 +225,6 @@ class Database:
             self.__insert_mfcc_representation(audio_file_rid, mfcc)
         if chroma is not None:
             self.__insert_chroma_representation(audio_file_rid, chroma)
-        # include item (tho it is not the focus of the project)
-        item = self.__insert_item(audio_file_rid, file_with_path)
         return audio_file_rid
 
     # LOADS

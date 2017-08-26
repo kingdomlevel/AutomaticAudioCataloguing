@@ -102,8 +102,7 @@ def calc_tempo(file_with_path=None, y=None, sr=-1):
 
     onset_env = librosa.onset.onset_strength(y, sr)
     tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
-    print(type(tempo))
-    print tempo
+    return float(tempo)
 
 
 def output_mfcc_image(file_with_path, mfcc):
@@ -161,7 +160,7 @@ def output_mel_spectogram(file_with_path, y=None, sr=-1):
     duration = librosa.core.get_duration(y, sr)
     S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128)
     log_S = librosa.logamplitude(S, ref_power=np.max)
-    plt.figure(figsize=(12,4))
+    plt.figure(figsize=(12, 4))
     librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel')
     plt.title('mel power spectogram')
     plt.colorbar(format='%+02.0f dB')
