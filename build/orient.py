@@ -25,6 +25,7 @@ class Database:
         # wait til orient is fully loaded before opening DB
         time.sleep(10)
 
+    # OPEN DB
     def open_db(self):
         self.client = pyorient.OrientDB('localhost', 2424)
         # connect to server
@@ -39,6 +40,15 @@ class Database:
             sys.exit()
         return
 
+    # CLOSE DB
+    def shutdown_db(self):
+        # shut down client
+        self.client.shutdown('root', 'hello')
+        # wait til orient is fully loaded before returning
+        time.sleep(10)
+        return
+
+    # INSERTS
     def __insert_audio_file(self, file_with_path):
         path, file_with_ext = os.path.split(file_with_path)
         with closing(wave.open(file_with_path, 'r')) as f:
@@ -75,6 +85,16 @@ class Database:
         self.client.command(relationship_command)
         return rid
 
+    def __insert_chroma_representation(self, audio_file_rid, chroma):
+        chroma_list = chroma.tolist()
+        data_item = {'@Chroma': {'Data': chroma_list}}
+        record = self.client.record_create(85, data_item)
+        rid = record._rid
+        print "\tNew Chroma vertex %s successfully inserted." % rid
+        relationship_command = "CREATE EDGE Represents FROM %s TO %s" % (rid, audio_file_rid)
+        self.client.command(relationship_command)
+        return rid
+
     def __insert_catalog_item(self, audio_file_rid, file_with_path):
         # check if matching CatalogItem already exists in db (for another manifestation)
         # e.g. 2 sides of one cassette; radio recording acorss multiple cassettes; etc
@@ -82,8 +102,6 @@ class Database:
         data = json.loads(doc)
         shelf_mark = data["ShelfMark"]
         catalog_rid = self.client.query("SELECT @rid FROM CatalogItem WHERE ShelfMark = '%s'" % shelf_mark)
-        print catalog_rid
-        print type(catalog_rid)
         if not catalog_rid:
             # need to insert new CatalogItem
             # generate catalog info from file and insert into db
@@ -187,7 +205,7 @@ class Database:
         self.client.command("CREATE EDGE FollowedBy FROM %s TO %s" % (rid_from, rid_to))
         return
 
-    def construct_manifestation(self, file_with_path, mfcc=None):
+    def construct_manifestation(self, file_with_path, mfcc=None, chroma=None):
         # only add to database if file is valid
         if not os.path.isfile(file_with_path):
             print "Invalid input path:\n\t" + file_with_path
@@ -203,29 +221,33 @@ class Database:
         self.__insert_catalog_item(audio_file_rid, file_with_path)
         if mfcc is not None:
             self.__insert_mfcc_representation(audio_file_rid, mfcc)
+        if chroma is not None:
+            self.__insert_chroma_representation(audio_file_rid, chroma)
         # include item (tho it is not the focus of the project)
         item = self.__insert_item(audio_file_rid, file_with_path)
         return audio_file_rid
 
+    # LOADS
     def load_record(self, rid):
         # load a record with id 'rid'
         record = self.client.record_load(rid)
         return record
 
-    def mfcc_from_database(rid):
+    def mfcc_from_database(self, mfcc_rid):
         # fetches MFCC embedded document from orient db, converts to numpy array
-        record = pyorient.load_record(rid)
+        record = pyorient.load_record(mfcc_rid)
         mfcc_list = record.__getattr__('MFCC')
         mfcc = np.asarray(mfcc_list)
         return mfcc
 
-    def shutdown_db(self):
-        # shut down client
-        self.client.shutdown('root', 'hello')
-        # wait til orient is fully loaded before returning
-        time.sleep(10)
-        return
+    def chroma_from_database(self, chroma_rid):
+        # fetches Chroma embedded document from orient db, converts to numpy array
+        record = pyorient.load_record(chroma_rid)
+        chroma_list = record.__getattr__('MFCC')
+        chroma = np.asarray(chroma_list)
+        return chroma
 
+    # TRUNCATE ALL VERTEXES (delete all data but maintain structure)
     def truncate_db(self):
         self.client.command("delete vertex from (select from v)")
         print "ALL VERTEXES IN DATABASE DELETED"

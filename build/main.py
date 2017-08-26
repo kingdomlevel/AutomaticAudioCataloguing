@@ -63,12 +63,16 @@ for file_with_path in input_files:
         label_file = segment.get_audacity_labels(core)
 
         # assuming mfcc has already been generated either on HPCCs or via 'preprocess.py'
-        # TO DO: READ IN MFCC DATA HERE, SOMEHOW? temp fix below
-        # mfcc = feature.extract_mfcc(file_with_path)
+        mfcc = feature.extract_mfcc(file_with_path)
+        # mfcc = feature.mfcc_from_csv(file_with_path)
+        feature.output_mfcc_image(file_with_path, mfcc)
+        chroma = feature.extract_chroma(file_with_path)
+        # chroma = feature.chroma_from_csv(file_with_path)
+        feature.output_chroma_image(file_with_path, chroma)
 
-        # start building database
-        # mainifestations
-        audio_file_rid = db.construct_manifestation(file_with_path)   # mfcc is optional
+        # build database
+        # mainifestation layer
+        audio_file_rid = db.construct_manifestation(file_with_path, mfcc, chroma)   # mfcc and chroma are optional
 
         # read segmentation label file to construct sub-manifestation layer of ontology
         __read_segs(audio_file_rid, label_file)

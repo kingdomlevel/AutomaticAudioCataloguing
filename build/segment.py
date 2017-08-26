@@ -4,13 +4,18 @@ import os
 import operator
 
 
-def __run_script(file_with_ext, path, core):
+def run_script(file_with_path):
+    path, file_with_ext = os.path.split(file_with_path)
+    path += '/'
+    core, extension = os.path.splitext(file_with_ext)
     jar_loc = '/Users/Niall/Documents/Uni/Project/LIUM/'
     # create a folder to place output files (keeping it tidy!)
-    output_loc = 'outputs/%s/' % core
+    output_loc = 'outputs/%s_16khz_mono/' % core
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
-    output_seg = 'outputs/%s/%s.seg' % (core, core)
+    # TIDY THIS UP!!
+    # output_seg = 'outputs/%s/%s.seg' % (core, core)
+    output_seg = '%s%s_16khz_mono.txt' % (output_loc, core)
     # run the LIUM script using the correct input/output masks
     shell_script = ('java -Xmx2024m -jar %slium_spkdiarization-8.4.1.jar '
                     '--fInputMask=%s%s --sOutputFormat=seg --saveAllStep '
@@ -29,9 +34,9 @@ def __extract_segments(core):
     # seg_in_name = 'outputs/%s/%s.c.seg' % (core, core)
     # music_in_name = 'outputs/%s/%s.sms.seg' % (core, core)
     seg_in_name = '/Volumes/ADATA HD710/frombjorn/smc26khzmonoseg/' \
-                  'Cassettes/%s_16khz_mono/%s_16khz_mono.txt.c.seg' % (core, core)
+                  '%s_16khz_mono/%s_16khz_mono.txt.c.seg' % (core, core)
     music_in_name = '/Volumes/ADATA HD710/frombjorn/smc26khzmonoseg/' \
-                    'Cassettes/%s_16khz_mono/%s_16khz_mono.txt.sms.seg' % (core, core)
+                    '%s_16khz_mono/%s_16khz_mono.txt.sms.seg' % (core, core)
     seg_in = open(seg_in_name, "r+")
     music_in = open(music_in_name)
     output_list = []
