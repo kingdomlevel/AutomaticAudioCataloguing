@@ -55,7 +55,7 @@ def mfcc_from_csv(file_with_path):
     path, file_with_ext = os.path.split(file_with_path)
     path += '/'
     core, extension = os.path.splitext(file_with_ext)
-    file_in_name = '/Volumes/ADATA HD710/frombjorn/smcmonofeatures/%s_48kHzmfccvb.csv' % core
+    file_in_name = '/Volumes/AdataHD710/preprocessed/smcmonofeatures/%s_48kHzmfccvb.csv' % core
     with open(file_in_name, 'rb') as f:
         reader = csv.reader(f, quoting=csv.QUOTE_NONNUMERIC)
         mfcc_list = list(reader)
@@ -82,7 +82,7 @@ def chroma_from_csv(file_with_path):
     path, file_with_ext = os.path.split(file_with_path)
     path += '/'
     core, extension = os.path.splitext(file_with_ext)
-    file_in_name = '/Volumes/ADATA HD710/frombjorn/smcmonofeatures/%s_24kHzchroma.csv' % core
+    file_in_name = '/Volumes/AdataHD710/preprocessed/smcmonofeatures/%s_24kHzchroma.csv' % core
     with open(file_in_name, 'rb') as f:
         reader = csv.reader(f, quoting=csv.QUOTE_NONNUMERIC)
         chroma_list = list(reader)
@@ -105,12 +105,26 @@ def calc_tempo(file_with_path=None, y=None, sr=-1):
     return float(tempo)
 
 
-def output_mfcc_image(file_with_path, mfcc):
+def mfcc_to_file(mfcc, core, output_folder="/Volumes/AdataHD710/preprocessed/smcmonofeatures/"):
+    # output mfcc to .csv file for future processing
+    output_file = "%s%s_48kHzmfccvb.csv" % (output_folder, core)
+    np.savetxt(output_file, mfcc, delimiter=",")
+    return output_file
+
+
+def chroma_to_file(chroma, core, output_folder="/Volumes/AdataHD710/preprocessed/smcmonofeatures/"):
+    # output chroma to .csv file for future processing
+    output_file = "%s%s_24kHzchroma.csv" % (output_folder, core)
+    np.savetxt(output_file, chroma, delimiter=",")
+    return output_file
+
+
+def output_mfcc_image(file_with_path, mfcc, output_folder="/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/"):
     # output as matplotlib file in /outputs/[core]_mfcc.png
     # handle i/o
     path, file_with_ext = os.path.split(file_with_path)
     core, extension = os.path.splitext(file_with_ext)
-    output_loc = "/Volumes/ADATA HD710/frombjorn/smc26khzmonoseg/%s_16khz_mono/images/" % core
+    output_loc = "%s%s_16khz_mono/images/" % (output_folder, core)
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
 
@@ -118,38 +132,40 @@ def output_mfcc_image(file_with_path, mfcc):
     plt.title('MFCC - %s' % core)
     plt.ylabel('MFCC')
     plt.xlabel('Time')
-    plt.colorbar()
     # keep tidy
     plt.tight_layout()
     plt.savefig('%s%s_mfcc.png' % (output_loc, core))
     return
 
 
-def output_chroma_image(file_with_path, chroma):
+def output_chroma_image(file_with_path, chroma, output_folder="/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/"):
     # output as matplotlib file in /outputs/[core]_chroma.png
     # handle i/o
     path, file_with_ext = os.path.split(file_with_path)
     core, extension = os.path.splitext(file_with_ext)
-    output_loc = "/Volumes/ADATA HD710/frombjorn/smc26khzmonoseg/%s_16khz_mono/images/" % core
+    output_loc = "%s%s_16khz_mono/images/" % (output_folder, core)
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
 
-    librosa.display.specshow(chroma, y_axis='chroma', x_axis='time')
+    im = librosa.display.specshow(chroma, y_axis='chroma', x_axis='time')
     plt.title('Chromagram - %s' % core)
-    plt.colorbar()
     # keep tidy
     plt.tight_layout()
+    plt.colorbar()
     plt.savefig('%s%s_chroma.png' % (output_loc, core))
     return
 
 
-def output_mel_spectogram(file_with_path, y=None, sr=-1):
+def output_mel_spectogram(file_with_path,
+                          y=None,
+                          sr=-1,
+                          output_folder="/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/"):
     # output mel spectogram for all or specified part of audio file
 
     # handle i/o
     path, file_with_ext = os.path.split(file_with_path)
     core, extension = os.path.splitext(file_with_ext)
-    output_loc = "/Volumes/ADATA HD710/frombjorn/smc26khzmonoseg/%s_16khz_mono/images/" % core
+    output_loc = "%s%s_16khz_mono/images/" % (output_folder, core)
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
 

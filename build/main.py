@@ -62,15 +62,13 @@ for file_with_path in input_files:
         # generate audacity label file
         label_file = segment.get_audacity_labels(core)
 
-        # assuming mfcc has already been generated either on HPCCs or via 'preprocess.py'
-        mfcc = feature.extract_mfcc(file_with_path)
-        # mfcc = feature.mfcc_from_csv(file_with_path)
+        # assuming mfcc / chroma has already been generated either on HPCCs or via 'preprocess.py'
+        # get representations from file
+        mfcc = feature.mfcc_from_csv(file_with_path)
+        chroma = feature.chroma_from_csv(file_with_path)
+
         feature.output_mfcc_image(file_with_path, mfcc)
-        chroma = feature.extract_chroma(file_with_path)
-        # chroma = feature.chroma_from_csv(file_with_path)
         feature.output_chroma_image(file_with_path, chroma)
-        tempo = feature.calc_tempo(file_with_path)
-        sys.exit()
 
         # CONSTRUCT ONTOLOGY:
         # mainifestation layer
