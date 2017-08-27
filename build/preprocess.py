@@ -14,7 +14,6 @@ Tk().withdraw()
 input_files = askopenfilenames(title='Select file(s) to perform processing on:')
 if not input_files:
     sys.exit("No valid file(s) selected")
-print input_files
 
 # loop in case of multiple files
 for file_with_path in input_files:

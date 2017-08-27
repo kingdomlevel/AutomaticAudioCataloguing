@@ -39,6 +39,7 @@ def __read_segs(rid, labels):
             previous_seg = seg_rid
     f_in.close()
 
+
 # hide main GUI frame, but prompt file selection
 # (almost definitely TEMP)
 Tk().withdraw()
