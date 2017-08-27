@@ -5,13 +5,13 @@ import operator
 
 
 def run_script(file_with_path,
-               output_folder="/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/",
+               output_dir,
                jar_loc='/Users/Niall/Documents/Uni/Project/LIUM/'):
     path, file_with_ext = os.path.split(file_with_path)
     path += '/'
     core, extension = os.path.splitext(file_with_ext)
     # create a folder to place output files (keeping it tidy!)
-    output_loc = '%s%s_16khz_mono/' % (output_folder, core)
+    output_loc = '%s/smc26khzmonoseg/%s_16khz_mono/' % (output_dir, core)
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
     output_seg = '%s%s_16khz_mono.txt' % (output_loc, core)
@@ -20,11 +20,12 @@ def run_script(file_with_path,
                     '--fInputMask=%s%s --sOutputFormat=seg --saveAllStep '
                     '--sOutputMask=%s --doCEClustering %s'
                     ) % (jar_loc, path, file_with_ext, output_seg, core)
+
     subprocess.call([shell_script], shell=True)
     return
 
 
-def __extract_segments(core):
+def __extract_segments(core, output_loc):
     # methods to return segments "as is" from LIUM scripts..
     # NOTE: speaker segments are very coarse, ie. often sequential segments of the same
     # speaker are not appended... it is recommended to tidy these segments using clean_labels()
@@ -32,10 +33,8 @@ def __extract_segments(core):
     # handle i/o
     # seg_in_name = 'outputs/%s/%s.c.seg' % (core, core)
     # music_in_name = 'outputs/%s/%s.sms.seg' % (core, core)
-    seg_in_name = '/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/' \
-                  '%s_16khz_mono/%s_16khz_mono.txt.c.seg' % (core, core)
-    music_in_name = '/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/' \
-                    '%s_16khz_mono/%s_16khz_mono.txt.sms.seg' % (core, core)
+    seg_in_name = '%s/smc26khzmonoseg/%s_16khz_mono/%s_16khz_mono.txt.c.seg' % (output_loc, core, core)
+    music_in_name = '%s/smc26khzmonoseg/%s_16khz_mono/%s_16khz_mono.txt.sms.seg' % (output_loc, core, core)
     seg_in = open(seg_in_name, "r+")
     music_in = open(music_in_name)
     output_list = []
@@ -142,7 +141,7 @@ def __clean_speakers(segments):
 
 
 def __write_labels_to_file(core, segments, output_folder):
-    output_loc = '%s%s_16khz_mono/' % (output_folder, core)
+    output_loc = '%s/smc26khzmonoseg/%s_16khz_mono/' % (output_folder, core)
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
     file_out_name = output_loc + '%sAUDACITY.txt' % core
@@ -153,8 +152,8 @@ def __write_labels_to_file(core, segments, output_folder):
     return file_out_name
 
 
-def get_audacity_labels(core, output_folder="/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/"):
-    fine_segs = __extract_segments(core)
+def get_audacity_labels(core, output_folder):
+    fine_segs = __extract_segments(core, output_folder)
     coarse_segs = __clean_speakers(fine_segs)
     file_out_name = __write_labels_to_file(core, coarse_segs, output_folder)
     return file_out_name
