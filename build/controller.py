@@ -32,8 +32,9 @@ class Control:
             path += '/'
             core, extension = os.path.splitext(file_with_ext)
 
+            # check for valid input
             if (extension == ".wav") or (extension == ".mp3"):
-                # valid input: (pre)process file
+                # pre-process file
 
                 # run segmentation - NO SPACES ALLOWED for lium script
                 # create copy of file (in same directory) and replace spaces w/ undersccores
@@ -41,6 +42,9 @@ class Control:
                     new_file_with_path = file_with_path.replace(' ', '_')
                     shutil.copy(file_with_path, new_file_with_path)
                     file_with_path = new_file_with_path
+                    path, file_with_ext = os.path.split(file_with_path)
+                    path += '/'
+                    core, extension = os.path.splitext(file_with_ext)
                 segment.run_script(file_with_path, output_loc)
                 # check for success; relay for output
                 wanted_output = "%s/smc26khzmonoseg/%s_16khz_mono/%s_16khz_mono.txt" % (output_loc, core, core)
@@ -84,6 +88,15 @@ class Control:
             output += "File: {:72}\n".format(file_with_ext)
 
             if (extension == ".wav") or (extension == ".mp3"):
+                # spaces will have been replaced in pre-processing!
+                if ' ' in file_with_path:
+                    new_file_with_path = file_with_path.replace(' ', '_')
+                    shutil.copy(file_with_path, new_file_with_path)
+                    file_with_path = new_file_with_path
+                    path, file_with_ext = os.path.split(file_with_path)
+                    path += '/'
+                    core, extension = os.path.splitext(file_with_ext)
+
                 # valid input: now check for pre-processing!
                 seg_txt = "%s/smc26khzmonoseg/%s_16khz_mono/%s_16khz_mono.txt" % (output_loc, core, core)
                 mfcc_file = "%s/smcmonofeatures/%s_48kHzmfccvb.csv" % (output_folder, core)

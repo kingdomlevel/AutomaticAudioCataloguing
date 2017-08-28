@@ -125,12 +125,12 @@ def chroma_to_file(chroma, core, output_dir):
     return output_file
 
 
-def output_mfcc_image(file_with_path, mfcc, output_folder="/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/"):
+def output_mfcc_image(file_with_path, mfcc, output_dir):
     # output as matplotlib file in /outputs/[core]_mfcc.png
     # handle i/o
     path, file_with_ext = os.path.split(file_with_path)
     core, extension = os.path.splitext(file_with_ext)
-    output_loc = "%s%s_16khz_mono/images/" % (output_folder, core)
+    output_loc = "%s/smcmonofeatures/images/" % output_dir
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
 
@@ -144,12 +144,12 @@ def output_mfcc_image(file_with_path, mfcc, output_folder="/Volumes/AdataHD710/p
     return
 
 
-def output_chroma_image(file_with_path, chroma, output_folder="/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/"):
+def output_chroma_image(file_with_path, chroma, output_dir):
     # output as matplotlib file in /outputs/[core]_chroma.png
     # handle i/o
     path, file_with_ext = os.path.split(file_with_path)
     core, extension = os.path.splitext(file_with_ext)
-    output_loc = "%s%s_16khz_mono/images/" % (output_folder, core)
+    output_loc = "%s/smcmonofeatures/images/" % output_dir
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
 
@@ -162,16 +162,13 @@ def output_chroma_image(file_with_path, chroma, output_folder="/Volumes/AdataHD7
     return
 
 
-def output_mel_spectogram(file_with_path,
-                          y=None,
-                          sr=-1,
-                          output_folder="/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/"):
+def output_mel_spectogram(file_with_path, output_dir, y=None, sr=-1):
     # output mel spectogram for all or specified part of audio file
 
     # handle i/o
     path, file_with_ext = os.path.split(file_with_path)
     core, extension = os.path.splitext(file_with_ext)
-    output_loc = "%s%s_16khz_mono/images/" % (output_folder, core)
+    output_loc = "%s/smcmonofeatures/images/" % output_dir
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
 
