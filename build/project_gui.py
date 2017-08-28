@@ -24,6 +24,8 @@ class GUI:
         self.choose_file_preprocess.pack()
         self.choose_file = Button(left_frame, text="Add pre-processed file(s) to DB", wraplength=120, command=self.process)
         self.choose_file.pack()
+        self.truncate_button = Button(left_frame, text="Truncate DB", wraplength=120, command=self.truncate_db)
+        self.truncate_button.pack()
         # centre text area
         output_label_text = "Output directory: %s" % output_loc
         self.output_label = Label(middle_frame, text=output_label_text)
@@ -43,21 +45,25 @@ class GUI:
         # right buttons
         self.change_output_loc_button = Button(right_frame, text="Change output directory", wraplength=60, command=self.change_output_dir)
         self.change_output_loc_button.pack()
+        self.shutdown_db_button = Button(right_frame, text="ShutdownDB", command=self.shutdown_db)
+        self.shutdown_db_button.pack(anchor='center')
         self.exit_button = Button(right_frame, text="Close", command=master.quit)
         self.exit_button.pack(anchor='center')
 
     def preprocess(self):
-            input_files = askopenfilenames(title='Select file(s) to perform pre-processing on:')
-            if not input_files:
-                print "No file(s) selected"
-            else:
-                text_feedback = c.preprocess_input(input_files, output_loc)
-                self.log_text.config(state=NORMAL)
-                self.log_text.delete(1.0, END)
-                self.log_text.insert(END, text_feedback)
-                self.log_text.config(state=DISABLED)
+        global c
+        input_files = askopenfilenames(title='Select file(s) to perform pre-processing on:')
+        if not input_files:
+            print "No file(s) selected"
+        else:
+            text_feedback = c.preprocess_input(input_files, output_loc)
+            self.log_text.config(state=NORMAL)
+            self.log_text.delete(1.0, END)
+            self.log_text.insert(END, text_feedback)
+            self.log_text.config(state=DISABLED)
 
     def process(self):
+        global c
         input_files = askopenfilenames(title='Select file(s) to add to database:')
         if not input_files:
             print "No file(s) selected"
@@ -68,6 +74,14 @@ class GUI:
             self.log_text.insert(END, text_feedback)
             self.log_text.config(state=DISABLED)
 
+    def truncate_db(self):
+        global c
+        text_feedback = c.truncate_database()
+        self.log_text.config(state=NORMAL)
+        self.log_text.delete(1.0, END)
+        self.log_text.insert(END, text_feedback)
+        self.log_text.config(state=DISABLED)
+
     def change_output_dir(self):
         # choose directory
         while True:
@@ -77,11 +91,10 @@ class GUI:
                 global output_loc
                 # valid directory: set for logic
                 output_loc = new_output_dir
-                c = Control(output_loc)
+                c.set_output_folder(output_loc)
                 # update display
                 output_label_text = "Output directory: %s" % output_loc
                 self.output_label.config(text=output_label_text)
-                # self.output_label.grid()
                 break
             else:
                 # valid directory
@@ -89,6 +102,9 @@ class GUI:
                     "Invalid Dirctory!",
                     "%s is not a valid directory to host output files." % new_output_dir
                 )
+
+    def shutdown_db(self):
+        c.shutdown_db()
 
 
 # global variables

@@ -16,8 +16,14 @@ class Control:
         global db
         output_folder = output_location
         db = orient.Database()
+        db.open_db()
 
-    def preprocess_input(self, input_files, output_loc):
+    def set_output_folder(self, output_dir):
+        global output_folder
+        output_folder = output_dir
+
+    @staticmethod
+    def preprocess_input(input_files, output_loc):
         # method to perform pre-processing on specified input
         # ... that is, the same processes that have been performed on HPCC for the provided data
         # explicitly, segment using 'segment.py'; extract MFCC & chroma features using 'feature.py'
@@ -71,7 +77,6 @@ class Control:
 
     def process_files(self, input_files, output_loc):
         global db
-        db.open_db()
         output = "  Adding files to database...\n"
 
         for file_with_path in input_files:
@@ -136,10 +141,10 @@ class Control:
                 # invalid input
                 output += "{:72}\n{:-<72}\n\n".format("! INVALID FORMAT !", "")
 
-        db.shutdown_db()
         return output
 
-    def __read_segs(self, rid, labels):
+    @staticmethod
+    def __read_segs(rid, labels):
         f_in = open(labels, "r")
         lines = f_in.readlines()
         # keep track of previous seg rid to do sequential relationships between segs
@@ -168,3 +173,14 @@ class Control:
                 db.insert_sequential_relationship(previous_seg, seg_rid)
                 previous_seg = seg_rid
         f_in.close()
+
+    @staticmethod
+    def truncate_database():
+        global db
+        output_txt = db.truncate_db()
+        return output_txt
+
+    @staticmethod
+    def shutdown_db():
+        global db
+        db.shutdown_db()
