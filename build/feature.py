@@ -51,11 +51,11 @@ def extract_mfcc(file_with_path=None, y=None, sr=-1):
     return mfcc
 
 
-def mfcc_from_csv(file_with_path):
+def mfcc_from_csv(file_with_path, output_dir):
     path, file_with_ext = os.path.split(file_with_path)
     path += '/'
     core, extension = os.path.splitext(file_with_ext)
-    file_in_name = '/Volumes/AdataHD710/preprocessed/smcmonofeatures/%s_48kHzmfccvb.csv' % core
+    file_in_name = '%s/smcmonofeatures/%s_48kHzmfccvb.csv' % (output_dir, core)
     with open(file_in_name, 'rb') as f:
         reader = csv.reader(f, quoting=csv.QUOTE_NONNUMERIC)
         mfcc_list = list(reader)
@@ -78,11 +78,11 @@ def extract_chroma(file_with_path=None, y=None, sr=-1):
     return chroma
 
 
-def chroma_from_csv(file_with_path):
+def chroma_from_csv(file_with_path, output_dir):
     path, file_with_ext = os.path.split(file_with_path)
     path += '/'
     core, extension = os.path.splitext(file_with_ext)
-    file_in_name = '/Volumes/AdataHD710/preprocessed/smcmonofeatures/%s_24kHzchroma.csv' % core
+    file_in_name = '%s/smcmonofeatures/%s_24kHzchroma.csv' % (output_dir, core)
     with open(file_in_name, 'rb') as f:
         reader = csv.reader(f, quoting=csv.QUOTE_NONNUMERIC)
         chroma_list = list(reader)
@@ -105,15 +105,21 @@ def calc_tempo(file_with_path=None, y=None, sr=-1):
     return float(tempo)
 
 
-def mfcc_to_file(mfcc, core, output_folder="/Volumes/AdataHD710/preprocessed/smcmonofeatures/"):
+def mfcc_to_file(mfcc, core, output_dir):
     # output mfcc to .csv file for future processing
+    output_folder = "%s/smcmonofeatures/" % output_dir
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
     output_file = "%s%s_48kHzmfccvb.csv" % (output_folder, core)
     np.savetxt(output_file, mfcc, delimiter=",")
     return output_file
 
 
-def chroma_to_file(chroma, core, output_folder="/Volumes/AdataHD710/preprocessed/smcmonofeatures/"):
+def chroma_to_file(chroma, core, output_dir):
     # output chroma to .csv file for future processing
+    output_folder = "%s/smcmonofeatures/" % output_dir
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
     output_file = "%s%s_24kHzchroma.csv" % (output_folder, core)
     np.savetxt(output_file, chroma, delimiter=",")
     return output_file

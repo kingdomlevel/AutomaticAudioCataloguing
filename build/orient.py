@@ -174,8 +174,6 @@ class Database:
         #   check if Person exists with Label: property matching this method's 'label' variable...
         query = "SELECT * from Person WHERE ID = '%s'" % label_id
         query_result = self.client.query(query)
-        # print "QUERY RESULT:"
-        # print query_result
         speaker_exists = False
         if query_result:
             # speaker with that id exists in database... but we need to check if it's related to 'this' file
@@ -249,7 +247,7 @@ class Database:
 
     # TRUNCATE ALL VERTEXES (delete all data but maintain structure)
     def truncate_db(self):
-        self.client.command("delete vertex from (select from v)")
+        output = self.client.command("delete vertex from (select from v)")
         print "ALL VERTEXES IN DATABASE DELETED"
-        return
+        return "All vertexes deleted from database %s" % output
 
