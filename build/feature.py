@@ -125,35 +125,37 @@ def chroma_to_file(chroma, core, output_dir):
     return output_file
 
 
-def output_mfcc_image(file_with_path, mfcc, output_folder="/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/"):
+def output_mfcc_image(file_with_path, mfcc, output_folder="/Volumes/AdataHD710/preprocessed/"):
     # output as matplotlib file in /outputs/[core]_mfcc.png
     # handle i/o
     path, file_with_ext = os.path.split(file_with_path)
     core, extension = os.path.splitext(file_with_ext)
-    output_loc = "%s%s_16khz_mono/images/" % (output_folder, core)
+    output_loc = "%ssmc26khzmonoseg/%s_16khz_mono/images/" % (output_folder, core)
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
 
-    librosa.display.specshow(mfcc)
+    plt.figure(figsize=(12, 4))
+    librosa.display.specshow(mfcc, x_axis='time')
+    plt.ylabel("MFCC")
     plt.title('MFCC - %s' % core)
-    plt.ylabel('MFCC')
-    plt.xlabel('Time')
     # keep tidy
     plt.tight_layout()
+    plt.colorbar()
     plt.savefig('%s%s_mfcc.png' % (output_loc, core))
     return
 
 
-def output_chroma_image(file_with_path, chroma, output_folder="/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/"):
+def output_chroma_image(file_with_path, chroma, output_folder="/Volumes/AdataHD710/preprocessed/"):
     # output as matplotlib file in /outputs/[core]_chroma.png
     # handle i/o
     path, file_with_ext = os.path.split(file_with_path)
     core, extension = os.path.splitext(file_with_ext)
-    output_loc = "%s%s_16khz_mono/images/" % (output_folder, core)
+    output_loc = "%ssmc26khzmonoseg/%s_16khz_mono/images/" % (output_folder, core)
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
 
-    im = librosa.display.specshow(chroma, y_axis='chroma', x_axis='time')
+    plt.figure(figsize=(12, 4))
+    librosa.display.specshow(chroma, y_axis='chroma', x_axis='time')
     plt.title('Chromagram - %s' % core)
     # keep tidy
     plt.tight_layout()
@@ -165,13 +167,13 @@ def output_chroma_image(file_with_path, chroma, output_folder="/Volumes/AdataHD7
 def output_mel_spectogram(file_with_path,
                           y=None,
                           sr=-1,
-                          output_folder="/Volumes/AdataHD710/preprocessed/smc26khzmonoseg/"):
+                          output_folder="/Volumes/AdataHD710/preprocessed/"):
     # output mel spectogram for all or specified part of audio file
 
     # handle i/o
     path, file_with_ext = os.path.split(file_with_path)
     core, extension = os.path.splitext(file_with_ext)
-    output_loc = "%s%s_16khz_mono/images/" % (output_folder, core)
+    output_loc = "%ssmc26khzmonoseg/%s_16khz_mono/images/" % (output_folder, core)
     if not os.path.exists(output_loc):
         os.makedirs(output_loc)
 
@@ -179,12 +181,11 @@ def output_mel_spectogram(file_with_path,
         # no time series data provided; read whole file
         y, sr = librosa.load(file_with_path)
 
-    duration = librosa.core.get_duration(y, sr)
     S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128)
     log_S = librosa.logamplitude(S, ref_power=np.max)
     plt.figure(figsize=(12, 4))
     librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel')
-    plt.title('mel power spectogram')
+    plt.title('Mel Spectogram - %s' % core)
     plt.colorbar(format='%+02.0f dB')
-    plt.savefig('%s%s_melSpectogram.png' % (output_loc, core, duration))
+    plt.savefig('%s%s_melSpectogram.png' % (output_loc, core))
     return

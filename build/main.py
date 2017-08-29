@@ -48,8 +48,8 @@ if not input_files:
     sys.exit("No valid file(s) selected")
 print input_files
 
-db = orient.Database()
-db.open_db()
+# db = orient.Database()
+# db.open_db()
 
 for file_with_path in input_files:
     # get details from file input
@@ -61,26 +61,33 @@ for file_with_path in input_files:
         # assuming LIUM segmentationhas been completed either on HPCCs or via 'preprocess.py'
 
         # generate audacity label file
-        label_file = segment.get_audacity_labels(core)
+        # label_file = segment.get_audacity_labels(core)
 
         # assuming mfcc / chroma has already been generated either on HPCCs or via 'preprocess.py'
         # get representations from file
-        mfcc = feature.mfcc_from_csv(file_with_path)
-        chroma = feature.chroma_from_csv(file_with_path)
+        output_dir = "/Volumes/AdataHD710/preprocessed/"    # default value
 
-        feature.output_mfcc_image(file_with_path, mfcc)
-        feature.output_chroma_image(file_with_path, chroma)
+        time_series = feature.get_time_series(file_with_path)
+        y = time_series.y
+        sr = time_series.sr
+
+        mfcc = feature.mfcc_from_csv(file_with_path, output_dir)
+        chroma = feature.chroma_from_csv(file_with_path, output_dir)
+
+        # feature.output_mfcc_image(file_with_path, mfcc)
+        # feature.output_chroma_image(file_with_path, chroma)
+        feature.output_mel_spectogram(file_with_path)
 
         # CONSTRUCT ONTOLOGY:
         # mainifestation layer
-        audio_file_rid = db.construct_manifestation(file_with_path, mfcc, chroma)   # mfcc and chroma are optional
+        # audio_file_rid = db.construct_manifestation(file_with_path, mfcc, chroma)   # mfcc and chroma are optional
         # read segmentation label file to construct sub-manifestation layer
-        __read_segs(audio_file_rid, label_file)
+        # __read_segs(audio_file_rid, label_file)
 
         # insert item (though it is not primary focus of the project)
-        db.insert_item(audio_file_rid, file_with_path)
+        # db.insert_item(audio_file_rid, file_with_path)
 
     else:
         print "File %s is not valid audio input; please select .wav or .mp3" % file_with_ext
 
-db.shutdown_db()
+# db.shutdown_db()
