@@ -61,6 +61,7 @@ def __get_master_or_copy(file_with_ext):
 
 
 def __get_length(file_with_path):
+    # returns length of audio file in seconds; stores as type float
     with closing(wave.open(file_with_path, 'r')) as f:
         frames = f.getnframes()
         rate = f.getframerate()

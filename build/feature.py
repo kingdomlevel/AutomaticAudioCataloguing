@@ -142,7 +142,7 @@ def output_mfcc_image(file_with_path, mfcc, output_folder="/Volumes/AdataHD710/p
     plt.tight_layout()
     plt.colorbar()
     plt.savefig('%s%s_mfcc.png' % (output_loc, core))
-    return
+    return '%s%s_mfcc.png' % (output_loc, core)
 
 
 def output_chroma_image(file_with_path, chroma, output_folder="/Volumes/AdataHD710/preprocessed/"):
@@ -161,7 +161,7 @@ def output_chroma_image(file_with_path, chroma, output_folder="/Volumes/AdataHD7
     plt.tight_layout()
     plt.colorbar()
     plt.savefig('%s%s_chroma.png' % (output_loc, core))
-    return
+    return '%s%s_chroma.png' % (output_loc, core)
 
 
 def output_mel_spectogram(file_with_path,
@@ -188,4 +188,4 @@ def output_mel_spectogram(file_with_path,
     plt.title('Mel Spectogram - %s' % core)
     plt.colorbar(format='%+02.0f dB')
     plt.savefig('%s%s_melSpectogram.png' % (output_loc, core))
-    return
+    return '%s%s_melSpectogram.png' % (output_loc, core)
