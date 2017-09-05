@@ -73,7 +73,7 @@ class Database:
         record = self.client.record_create(69, data_item)
         rid = record._rid
         print "\tNew Item vertex %s successfully inserted." % rid
-        relationship_command = "CREATE EDGE ExemplifiedBy FROM %s TO %s" % (audio_file_rid, rid)
+        relationship_command = "CREATE EDGE IsExemplifiedBy FROM %s TO %s" % (audio_file_rid, rid)
         self.client.command(relationship_command)
         return rid
 
@@ -184,7 +184,7 @@ class Database:
             speaker_id = query_result[0]._rid
             query = "SELECT in() FROM %s" % speaker_id
             query_result = self.client.query(query)
-            seg_returned =  '#' + query_result[0]._in[0].get()
+            seg_returned = '#' + query_result[0]._in[0].get()
             # ...SpeechSegment has IsPartof relationship to AudioFile matching this method's 'audio_file_rid'?
             query = "SELECT out('IsPartOf') FROM %s" % seg_returned
             query_result = self.client.query(query)
@@ -253,4 +253,3 @@ class Database:
         output = self.client.command("delete vertex from (select from v)")
         print "ALL VERTEXES IN DATABASE DELETED"
         return "All vertexes deleted from database %s" % output
-

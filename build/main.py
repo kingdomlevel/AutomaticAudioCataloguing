@@ -61,22 +61,22 @@ for file_with_path in input_files:
         # assuming LIUM segmentationhas been completed either on HPCCs or via 'preprocess.py'
 
         # generate audacity label file
-        # label_file = segment.get_audacity_labels(core)
+        output_dir = "/Users/Niall/Desktop/evaluation"    # default value
+        label_file = segment.get_audacity_labels(core, output_dir)
 
         # assuming mfcc / chroma has already been generated either on HPCCs or via 'preprocess.py'
         # get representations from file
-        output_dir = "/Volumes/AdataHD710/preprocessed/"    # default value
 
-        time_series = feature.get_time_series(file_with_path)
-        y = time_series.y
-        sr = time_series.sr
+        # time_series = feature.get_time_series(file_with_path)
+        # y = time_series.y
+        # sr = time_series.sr
 
-        mfcc = feature.mfcc_from_csv(file_with_path, output_dir)
-        chroma = feature.chroma_from_csv(file_with_path, output_dir)
+        # mfcc = feature.mfcc_from_csv(file_with_path, output_dir)
+        # chroma = feature.chroma_from_csv(file_with_path, output_dir)
 
         # feature.output_mfcc_image(file_with_path, mfcc)
         # feature.output_chroma_image(file_with_path, chroma)
-        feature.output_mel_spectogram(file_with_path)
+        # feature.output_mel_spectogram(file_with_path)
 
         # CONSTRUCT ONTOLOGY:
         # mainifestation layer

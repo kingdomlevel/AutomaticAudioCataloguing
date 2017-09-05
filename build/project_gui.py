@@ -16,13 +16,15 @@ class GUI:
         middle_frame = Frame(master, width=600, height=300)
         middle_frame.grid(row=0, column=1, sticky=W+E+N+S, padx=10, pady=10)
         middle_frame.grid_propagate(False)
-        right_frame=Frame(master)
+        right_frame = Frame(master)
         right_frame.grid(row=0, column=2, sticky=E, padx=10, pady=10)
 
         # left buttons
-        self.choose_file_preprocess = Button(left_frame, text="Pre-process file(s)", wraplength=120, command=self.preprocess)
+        self.choose_file_preprocess = Button(left_frame, text="Pre-process file(s)",
+                                             wraplength=120, command=self.preprocess)
         self.choose_file_preprocess.pack()
-        self.choose_file = Button(left_frame, text="Add pre-processed file(s) to DB", wraplength=120, command=self.process)
+        self.choose_file = Button(left_frame, text="Add pre-processed file(s) to DB",
+                                  wraplength=120, command=self.process)
         self.choose_file.pack()
         self.truncate_button = Button(left_frame, text="Truncate DB", wraplength=120, command=self.truncate_db)
         self.truncate_button.pack()
@@ -43,7 +45,8 @@ class GUI:
         self.log_text.config(yscrollcommand=self.scroll.set)
         self.log_text.config(state=DISABLED)
         # right buttons
-        self.change_output_loc_button = Button(right_frame, text="Change output directory", wraplength=60, command=self.change_output_dir)
+        self.change_output_loc_button = Button(right_frame, text="Change output directory",
+                                               wraplength=60, command=self.change_output_dir)
         self.change_output_loc_button.pack()
         self.shutdown_db_button = Button(right_frame, text="ShutdownDB", command=self.shutdown_db)
         self.shutdown_db_button.pack(anchor='center')
@@ -75,6 +78,7 @@ class GUI:
             self.log_text.config(state=DISABLED)
 
     def truncate_db(self):
+        # delete all files in database (use for re-populating)
         global c
         text_feedback = c.truncate_database()
         self.log_text.config(state=NORMAL)
