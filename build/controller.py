@@ -38,7 +38,7 @@ class Control:
             path += '/'
             core, extension = os.path.splitext(file_with_ext)
 
-            if (extension == ".wav") or (extension == ".mp3"):
+            if (extension.lower() == ".wav") or (extension.lower() == ".mp3"):
                 # valid input: (pre)process file
 
                 # run segmentation - NO SPACES ALLOWED for lium script

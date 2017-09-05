@@ -22,7 +22,7 @@ for file_with_path in input_files:
     path += '/'
     core, extension = os.path.splitext(file_with_ext)
 
-    if (extension == ".wav") or (extension == ".mp3"):
+    if (extension.lower() == ".wav") or (extension.lower() == ".mp3"):
         # run segmentation
         segment.run_script(file_with_path)
 

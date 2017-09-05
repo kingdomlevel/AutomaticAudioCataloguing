@@ -57,12 +57,12 @@ for file_with_path in input_files:
     path += '/'
     core, extension = os.path.splitext(file_with_ext)
 
-    if (extension == ".wav") or (extension == ".mp3"):
+    if (extension.lower() == ".wav") or (extension.lower() == ".mp3"):
         # assuming LIUM segmentationhas been completed either on HPCCs or via 'preprocess.py'
 
         # generate audacity label file
-        output_dir = "/Users/Niall/Desktop/evaluation"    # default value
-        label_file = segment.get_audacity_labels(core, output_dir)
+        # output_dir = "/Users/Niall/Desktop/evaluation"    # default value
+        # label_file = segment.get_audacity_labels(core, output_dir)
 
         # assuming mfcc / chroma has already been generated either on HPCCs or via 'preprocess.py'
         # get representations from file
@@ -71,7 +71,7 @@ for file_with_path in input_files:
         # y = time_series.y
         # sr = time_series.sr
 
-        # mfcc = feature.mfcc_from_csv(file_with_path, output_dir)
+        mfcc = feature.mfcc_from_csv(file_with_path)
         # chroma = feature.chroma_from_csv(file_with_path, output_dir)
 
         # feature.output_mfcc_image(file_with_path, mfcc)
