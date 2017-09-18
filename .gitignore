@@ -2,11 +2,14 @@
 Audio/
 build/*.pyc
 build/outputs/
+evaluation/
 frbr/
+info/
 info/agreements/
 info/assessment criteria.pdf
 librosa/
 lium/
 MIRtoolbox/
 orientdb/
+submission/
 *.png
