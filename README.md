@@ -12,7 +12,7 @@ Code repository for my university summer project **_Automatic Tools for Populati
 
 ---
 ### Prerequisites
-* [OrientDB](https://orientdb.com/) database backend, preconfigured for FRBR-inspired audio ontology ( [restore](https://orientdb.com/docs/2.1/Backup-and-Restore.html) from the backup `.zip` available [**here**](https://drive.google.com/open?id=0B4_JQ3-xFK6VTVNDTmNwR1pxYzg))
+* [OrientDB](https://orientdb.com/) database backend, preconfigured for FRBR-inspired audio ontology ([restore](https://orientdb.com/docs/2.1/Backup-and-Restore.html) from the backup `.zip` available [**here**](https://drive.google.com/open?id=0B4_JQ3-xFK6VTVNDTmNwR1pxYzg))
 * [LIUM](http://www-lium.univ-lemans.fr/diarization/doku.php/welcome) toolbox (packaged `.jar` version)
 * [Python 2.7](https://www.python.org/downloads/release/python-2714/)
 * Packages as listed in `requirements.txt`
