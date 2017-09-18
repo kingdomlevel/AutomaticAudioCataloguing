@@ -4,6 +4,7 @@ build/*.pyc
 build/outputs/
 empty_project_db.zip
 evaluation/
+final_report_hand_in
 final_report_hand_in.pages
 frbr/
 info/
