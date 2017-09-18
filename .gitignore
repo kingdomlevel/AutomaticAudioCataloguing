@@ -3,6 +3,7 @@ Audio/
 build/*.pyc
 build/outputs/
 evaluation/
+final_report_hand_in.pages
 frbr/
 info/
 info/agreements/
